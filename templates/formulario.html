@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pronostico del Clima</title>
+    <!-- Incluir Tailwind CSS desde CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .rain, .snow {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .rain::before, .snow::before {
+            content: '';
+            position: absolute;
+            display: block;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-repeat: repeat;
+        }
+        .rain::before {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="%239cf" d="M5 19h14v1H5z"/></svg>');
+            animation: rain 0.5s linear infinite;
+        }
+        .snow::before {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24"><circle fill="%23fff" cx="12" cy="12" r="2"/></svg>');
+            animation: snow 2s linear infinite;
+        }
+        @keyframes rain {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        @keyframes snow {
+            0% { transform: translateY(-100%) }
+            100% { transform: translateY(100%) }
+        }
+
+    </style>
+</head>
+<body class="container mx-auto bg-blue-900 min-h-screen flex justify-center p-16">
+    <div class="w-auto flex items-center">
+        
+        <div class="w-full bg-white p-8 rounded-lg shadow-lg max-w-lg">
+            <h1 class="text-2xl font-bold text-center mb-4">Pronostico del Clima</h1>
+            <h1 class="text-base font-bold text-center mb-4">Lluvioso o Nevado  <h1/>
+            <form id="formulario" onsubmit="clasificarClima(event)" class="space-y-4">
+                <div>
+                    <label for="Dew_Point_Temp_C" class="block text-sm font-medium text-gray-700">Dew Point Temp_C = Punto de rocío (°C):</label>
+                    <input type="text" id="Dew_Point_Temp_C" name="Dew Point Temp_C" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="Temp_C" class="block text-sm font-medium text-gray-700">Temp_C = Temperatura (°C):</label>
+                    <input type="text" id="Temp_C" name="Temp_C" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="Press_kPa" class="block text-sm font-medium text-gray-700">Press_kPa = Presión (kPa):</label>
+                    <input type="text" id="Press_kPa" name="Press_kPa" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="Rel_Hum" class="block text-sm font-medium text-gray-700">Rel Hum_% = Humedad Relativa (%):</label>
+                    <input type="text" id="Rel_Hum" name="Rel Hum_%" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="Month" class="block text-sm font-medium text-gray-700">Month = Mes:</label>
+                    <input type="text" id="Month" name="Month" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <input type="submit" value="Enviar" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            </form>
+            <p id="resultado" class="mt-4 text-xl font-bold text-blue-800 text-center"></p>
+        </div>
+
+        <div class="w-auto ml-10">
+            <h1 class="text-2xl font-bold text-center mb-4 text-white">Ejemplo de como hacer las pruebas<h1/>
+            <img src="static/images/ejemplo.png" alt="Imagen de ejemplo">
+        </div>
+    </div>    
+    <div id="weatherEffect" class=""></div>
+    <script>
+        function clasificarClima(event) {
+            event.preventDefault(); // Prevenir el envío tradicional del formulario
+
+            // Recoger los valores del formulario
+            const Dew_Point_Temp_C = document.getElementById('Dew_Point_Temp_C').value.trim();
+            const Temp_C = document.getElementById('Temp_C').value.trim();
+            const Press_kPa = document.getElementById('Press_kPa').value.trim();
+            const Rel_Hum = document.getElementById('Rel_Hum').value.trim();
+            const Month = document.getElementById('Month').value.trim();
+
+            // Validación simple para verificar que los campos no estén vacíos
+            if (!Dew_Point_Temp_C || !Temp_C || !Press_kPa || !Rel_Hum || !Month) {
+                document.getElementById('resultado').innerText = 'Por favor, completa todos los campos antes de enviar.';
+                return;
+            }
+
+            // Preparar los datos para el envío
+            const data = `Dew_Point_Temp_C=${encodeURIComponent(Dew_Point_Temp_C)}&Temp_C=${encodeURIComponent(Temp_C)}&Press_kPa=${encodeURIComponent(Press_kPa)}&Rel_Hum=${encodeURIComponent(Rel_Hum)}&Month=${encodeURIComponent(Month)}`;
+
+            // Realizar la solicitud al servidor usando fetch API
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('resultado').innerText = 'Error: ' + data.error;
+                    document.getElementById('weatherEffect').className = '';
+                } else {
+                    document.getElementById('resultado').innerText = 'Se pronostica Weather = ' + data.categoria + ',' +' \nsegún los datos ingresados.';
+                    if (data.categoria === 'Lluvia') {
+                        document.getElementById('weatherEffect').className = 'rain';
+                    } else if (data.categoria === 'Nieve') {
+                        document.getElementById('weatherEffect').className = 'snow';
+                    } else {
+                        document.getElementById('weatherEffect').className = '';
+                    }
+                }
+            })
+            .catch(error => {
+                document.getElementById('resultado').innerText = 'Error en la solicitud.';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
